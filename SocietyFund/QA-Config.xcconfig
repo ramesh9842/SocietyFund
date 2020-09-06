@@ -1,0 +1,18 @@
+//
+//  QA-Config.xcconfig
+//  SocietyFund
+//
+//  Created by sanish on 8/28/20.
+//  Copyright © 2020 AahamSolutions. All rights reserved.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+base_protocol = https
+base_url = www.qa.com
+
+// App Setting
+APP_IDENTIFIER = com.aaham.societyfund.qa
+APP_NAME = QA-SocietyFund
+APPICON = QA-AppIcon
