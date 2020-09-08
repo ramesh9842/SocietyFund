@@ -9,10 +9,10 @@
 import UIKit
 
 class TabBarController: UITabBarController {
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
     }
     
     override func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
@@ -25,5 +25,5 @@ class TabBarController: UITabBarController {
         propertyAnimator.addAnimations({ barButtonView.transform = .identity }, delayFactor: CGFloat(animationLength))
         propertyAnimator.startAnimation()
     }
-
+    
 }

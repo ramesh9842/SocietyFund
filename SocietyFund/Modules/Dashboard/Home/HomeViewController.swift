@@ -14,13 +14,22 @@ import GoogleSignIn
 
 class HomeViewController: UIViewController, UISearchControllerDelegate {
     
+    @IBOutlet weak var containerView: UIView!
     @IBOutlet weak var viewSignUp: UIView!
     @IBOutlet weak var viewLogin: UIView!
+    @IBOutlet weak var collectionView: UICollectionView!
+    @IBOutlet weak var collectionViewHeight: NSLayoutConstraint!
+    @IBOutlet weak var pageControl: UIPageControl!
+    
     var searchController: UISearchController!
-    var currentPage = 0
+    var current = 0
+    var timer: Timer!
+    var homeVM = HomeViewModel()
+    var projects = [CategoricalProject]()
+    private let identifier = "trendingProjectCollectionCell"
     
     let projectsDes = ["1. Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. ","2. Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. ","3. Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. "]
-   
+    
     
     @IBAction func showDrawer(_ sender: UIBarButtonItem) {
         mmDrawerContainer?.toggle(.left, animated: true, completion: nil)
@@ -49,10 +58,6 @@ class HomeViewController: UIViewController, UISearchControllerDelegate {
         navigationController?.pushViewController(vc, animated: true)
     }
     
-    @IBOutlet weak var collectionView: UICollectionView!
-    @IBOutlet weak var collectionViewHeight: NSLayoutConstraint!
-    private let identifier = "trendingProjectCollectionCell"
-    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         Log.debug(msg: "viewWillAppear")
@@ -62,15 +67,16 @@ class HomeViewController: UIViewController, UISearchControllerDelegate {
         }else {
             userLoggedOut()
         }
-        
-//        if let token = AccessToken.current,
-//            !token.isExpired {
-//            userLoggedIn()
-//        }else if(isGoogleSignedIn == true) {
-//            userLoggedIn()
-//        }else {
-//            userLoggedOut()
-//        }
+        /*
+         if let token = AccessToken.current,
+         !token.isExpired {
+         userLoggedIn()
+         }else if(isGoogleSignedIn == true) {
+         userLoggedIn()
+         }else {
+         userLoggedOut()
+         }
+         */
     }
     
     func userLoggedIn() {
@@ -86,6 +92,70 @@ class HomeViewController: UIViewController, UISearchControllerDelegate {
     }
     
     override func viewDidLoad() {
+        setUpView()
+        addLogoToNavigationBarItem()
+        showSpinner(onView: self.view)
+        homeVM.setUpView()
+        setTimer()
+        
+        homeVM.delegate = self
+    }
+    
+    func setTimer() {
+        timer = Timer.scheduledTimer(timeInterval: 3.0, target: self, selector: #selector(autoScroll), userInfo: nil,
+                                     repeats: true)
+    }
+    
+    // create auto scroll
+    @objc func autoScroll() {
+        current += 1
+        self.pageControl.currentPage = current
+        if current < projects.count {
+            let indexPath = IndexPath(item: current, section: 0)
+            self.collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
+            
+            
+        } else {
+            current = 0
+            self.pageControl.currentPage = current
+            self.collectionView.scrollToItem(at: IndexPath(item: current, section: 0), at: .centeredHorizontally, animated: true)
+        }
+    }
+    
+    @IBAction func scrollRight(_ sender: UIButton) {
+        timer.invalidate()
+        if current < self.projects.count - 1 {
+            current += 1
+            self.pageControl.currentPage = current
+            let indexPath = IndexPath(item: current, section: 0)
+            collectionView.scrollToItem(at: indexPath, at: .right, animated: true)
+            
+        }else {
+            self.pageControl.currentPage = 0
+            current = 0
+            self.collectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .centeredHorizontally, animated: true)
+            
+        }
+    }
+    
+    
+    @IBAction func scrollLeft(_ sender: UIButton) {
+        timer.invalidate()
+        Log.debug(msg: current)
+        if current == 0 {
+            current = projects.count - 1
+            self.pageControl.currentPage = current
+            let indexPath = IndexPath(item: current, section: 0)
+            collectionView.scrollToItem(at: indexPath, at: .left, animated: true)
+        }else {
+            current -= 1
+            self.pageControl.currentPage = current
+            let indexPath = IndexPath(item: current, section: 0)
+            collectionView.scrollToItem(at: indexPath, at: .left, animated: true)
+        }
+    }
+    
+    func setUpView() {
         self.collectionView.delegate = self
         self.collectionView.dataSource = self
         self.collectionView.alwaysBounceHorizontal = true
@@ -93,65 +163,53 @@ class HomeViewController: UIViewController, UISearchControllerDelegate {
         if let flowLayout = collectionView.collectionViewLayout as? UICollectionViewFlowLayout {
             flowLayout.scrollDirection = .horizontal
         }
-        addLogoToNavigationBarItem()
-        /*
-                API Caller: Network
-                https://cli.smartcardnepal.com/api/customer/auth
-                http://merotv.f1soft.com.np/apiV2/getCableOperators
-                let params = ["username": "asf", "password": "asf"]
-                APIService.shared.request("http://merotv.f1soft.com.np/apiV2/getCableOperators", method: .GET, params: nil) { (result: Result<Any, APIError>) in
-                    switch result {
-                    case .success(let result):
-                        print(result as! Data)
-                    case .failure(let error):
-                        self.alert(message: error.rawValue)
-                    }
-                }
-                
-                */
+        containerView.isHidden = true
     }
     
+}
+
+// MARK: - HomeViewDelegate
+extension HomeViewController: HomeViewDelegate {
+    func onSuccess(_ projects: [CategoricalProject]) {
+        removeSpinner()
+        self.projects = projects
+        DispatchQueue.main.async {
+            self.pageControl.currentPage = 0
+            self.pageControl.numberOfPages = projects.count
+            self.containerView.isHidden = false
+            self.collectionView.reloadData()
+        }
+    }
     
-    
+    func onFailure(msg: String) {
+        hideMaterialLoadingIndicator()
+        DispatchQueue.main.async {
+            self.collectionView.isHidden = true
+        }
+        alert(message: msg, title: "")
+    }
 }
 
 //MARK: - CollectionViewDelegate
 extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 3
+        return self.projects.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: identifier, for: indexPath) as! HomeCollectionCell
-        cell.lblProjectDesc.text = projectsDes[indexPath.row]
+        let project = self.projects[indexPath.row]
+        let raisedAmt = project.raisedAmount ?? 0
+        let goalAmt = project.goalAmount ?? 0
+        cell.lblTitle.text = project.title
+        cell.lblProjectDesc.text = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged."
         collectionViewHeight.constant = collectionView.contentSize.height
-        cell.progressBar.setProgress(Float(50.0/100.0), animated: true)
-        cell.btnNext.addTarget(self, action: #selector(handleNextPage), for:
-            .touchUpInside)
-        cell.btnNext.tag = indexPath.row
-        cell.btnPrevious.addTarget(self, action: #selector(handlePreviousPage), for:
-            .touchUpInside)
-        Log.debug(msg: indexPath.row)
+        cell.progressBar.setProgress(Float(raisedAmt/goalAmt), animated: true)
+        cell.lblSupporters.text = "\(String(describing: project.donor!.count))"
+        cell.lblRaisedStat.text = "Rs. \(raisedAmt) of Rs. \(goalAmt)"
+        cell.lblActive.text = (project.status! == 1 ? "Active" : "Inactive")
+    
         return cell
-    }
-    
-    @objc func handleNextPage(button: UIButton) {
-        Log.debug(msg: button.tag)
-        if button.tag < projectsDes.count - 1 {
-            let nextIndex = IndexPath(row: button.tag + 1, section: 0)
-            collectionView.scrollToItem(at: nextIndex, at: .right, animated: true)
-            print("currentPage: \(nextIndex.row)")
-            currentPage = nextIndex.row
-        }
-    }
-    
-    @objc func handlePreviousPage(button: UIButton) {
-        Log.debug(msg: currentPage)
-        if currentPage != 0 {
-            let indexPath = IndexPath(item: currentPage - 1, section: 0)
-            collectionView.scrollToItem(at: indexPath, at: .left, animated: true)
-            currentPage = indexPath.row
-        }
     }
     
 }

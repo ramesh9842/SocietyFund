@@ -14,6 +14,7 @@ import MMDrawerController
 import MaterialComponents.MDCActivityIndicator
 
 var vSpinner: UIView?
+var activityIndicator: MDCActivityIndicator?
 
 extension UIViewController {
     func addOverlayView(with color: UIColor) {
@@ -133,6 +134,25 @@ extension UIViewController {
         container.addSubview(loadingView)
         self.view.addSubview(container)
         actInd.startAnimating()
+    }
+   
+    func showMaterialLoadingIndicator() {
+        activityIndicator = MDCActivityIndicator()
+        activityIndicator?.sizeToFit()
+        activityIndicator?.center = view.center
+        view.bringSubviewToFront(activityIndicator!)
+        view.addSubview(activityIndicator!)
+
+        // To make the activity indicator appear:
+        DispatchQueue.main.async {
+            activityIndicator!.startAnimating()
+        }
+    }
+    
+    func hideMaterialLoadingIndicator() {
+        DispatchQueue.main.async {
+            activityIndicator!.stopAnimating()
+        }
     }
     
     func hideLoading() {

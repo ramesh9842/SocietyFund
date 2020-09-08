@@ -21,6 +21,7 @@ class SearchCountryViewController: UIViewController {
     var selectedCountry: CountryCode?
     var delegate: CountryDelegate?
     var searchedCountry = [CountryCode]()
+    var searchVM = SearchCountryViewModel()
     @IBAction func btnCancelClicked(_ sender: UIButton) {
         dismiss(animated: false, completion: nil)
     }
@@ -30,7 +31,7 @@ class SearchCountryViewController: UIViewController {
         searchBar.delegate = self
         tableView.tableFooterView = UIView(frame: .zero)
         view.bringSubviewToFront(viewAlert)
-        SignInInteractor().getDialCode { (countryCodes) in
+        searchVM.getDialCode { (countryCodes) in
             self.countryCodes = countryCodes
             self.searchedCountry = countryCodes
             tableView.reloadData()
@@ -42,15 +43,14 @@ class SearchCountryViewController: UIViewController {
 //MARK: - SearchBarDelegate
 extension SearchCountryViewController: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        Log.debug(msg: searchBar.text)
         self.searchedCountry.removeAll()
         if (searchBar.text!.isEmpty) {
             self.searchedCountry = self.countryCodes
         }else {
             for country in self.countryCodes {
                 if ((country.name!.contains(searchBar.text!)) || (country.code!.contains(searchBar.text!))) {
-                   self.searchedCountry.append(country)
-               }
+                    self.searchedCountry.append(country)
+                }
             }
         }
         tableView.reloadData()
@@ -76,8 +76,8 @@ extension SearchCountryViewController: UITableViewDelegate, UITableViewDataSourc
         let country = searchedCountry[indexPath.row].name!
         let shortName = searchedCountry[indexPath.row].code!
         cell.lblCountry.text = """
-                  \(country) (\(shortName))
-                """
+        \(country) (\(shortName))
+        """
         cell.lblCode.text = searchedCountry[indexPath.row].dialCode
         return cell
     }

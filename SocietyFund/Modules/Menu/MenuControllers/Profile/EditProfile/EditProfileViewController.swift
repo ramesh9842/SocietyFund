@@ -17,17 +17,26 @@ class EditProfileViewController: UIViewController {
     @IBOutlet weak var imgProfile: UIImageView!
     
     @IBAction func editProfilePressed(_ sender: UIButton) {
-        validate()
+        validator.validate(tfFirstName: tfFirstName, tfLName: tfLName, tfGeoCode: tfGeoCode, tfMobile: tfMobile, tfEmail: tfEmail)
     }
-    var isGoodToGo = false
-    var mobileErr = false
-    var emailErr = false
+    
+    var editprofileVM: EditProfileViewModel!
+    var validator: EditProfileInputValidator!
     var profileData: ProfileModel!
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
         customTextFieldsWithDelegate()
+        setUpView()
+        editprofileVM = EditProfileViewModel()
+        validator = EditProfileInputValidator(vm: editprofileVM)
+        validator.delegate = self
+        editprofileVM.delegate = self
         
+    }
+    
+    func setUpView() {
         tfFirstName.text = profileData.firstName
         tfLName.text = profileData.lastName
         tfMobile.text = profileData.phone
@@ -42,7 +51,6 @@ class EditProfileViewController: UIViewController {
                 }
             }
         }
-        
     }
     
     func customTextFieldsWithDelegate() {
@@ -59,45 +67,28 @@ class EditProfileViewController: UIViewController {
         tfEmail.delegate = self
     }
     
-    func validate() {
-        guard let fname = tfFirstName.text?.trimmed, let lname = tfLName.text?.trimmed, let geocode = tfGeoCode.text?.trimmed, let mobile = tfMobile.text?.trimmed, let email = tfEmail.text?.trimmed else { return }
-        
-        if (fname.isEmpty || lname.isEmpty || geocode.isEmpty || mobile.isEmpty || email.isEmpty) {
-            isGoodToGo = false
-            alert(message: "Fields can't be empty.", title: "Empty Field!")
-        }else {
-            if(!mobile.isValidRegEx(.phoneNo)) {
-                alert(message: "e.g. 9810219190", title: "Invalid Mobile Number!")
-                mobileErr = false
-            }else {
-                mobileErr = true
-            }
-            if(!email.isValidRegEx(.email)) {
-                alert(message: "e.g. mike@hello.com", title: "Invalid Email!")
-                emailErr = false
-            }else{
-                emailErr = true
-            }
-        }
-        isGoodToGo = mobileErr && emailErr
-        if isGoodToGo {
-            editProfile(firstName: fname, lastName: lname, mobile: mobile, email: email, profileImage: "")
-        }
-        //        editProfile(firstName: fname, lastName: lname, mobile: geocode.append(mobile), email: email, profileImage: : UIImage(named: "somephoto"))
+}
+
+// MARK: - EditProfileDelegate
+extension EditProfileViewController: EditProfileDelegate {
+    func onSuccess(_ response: EditProfileResponse) {
+        Log.debug(msg: response)
     }
     
-    func editProfile(firstName: String, lastName: String, mobile: String, email: String, profileImage: String) {
-        print(firstName,lastName,mobile,email,profileImage)
+    func onFailure(msg: String, title: String) {
+        alert(message: msg, title: title)
     }
+    
     
 }
 
+
 // MARK: - TextFieldDelegate
 extension EditProfileViewController: UITextFieldDelegate {
-     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-           textField.resignFirstResponder()
-           return true
-     }
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
+    }
     func textFieldDidBeginEditing(_ textField: UITextField) {
         if textField.tag == 3 {
             textField.resignFirstResponder()

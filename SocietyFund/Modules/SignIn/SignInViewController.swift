@@ -21,25 +21,25 @@ class SignInViewController: UIViewController {
     @IBOutlet weak var viewFb: UIView!
     @IBOutlet weak var viewGoogle: UIView!
     
-    var usernameErr = false
-    var passwordErr = false
+    var signInVM: SignInViewModel?
     var loginButton: FBLoginButton!
-    var interactor: SignInInteractor?
+    var validator: InputValidator!
     @IBAction func signInClicked(_ sender: UIButton) {
         
-        validate()
+        validator.validate(tfMobile: tfMobile, tfPassword: tfPassword)
         
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        //      addFacebookButton()
         customizeButtons()
         setDelegate()
         addTapGesture()
-        interactor = SignInInteractor()
-        
+        signInVM = SignInViewModel()
+        validator = InputValidator(vm: signInVM!)
+        validator.delegate = self
+        signInVM?.delegate = self
     }
     
     func addTapGesture() {
@@ -55,7 +55,7 @@ class SignInViewController: UIViewController {
     
     @objc func fbLoginClicked() {
         
-        interactor?.performFacebookLoginRequest(self, completion: { (result) in
+        signInVM?.performFacebookLoginRequest(self, completion: { (result) in
             switch result {
             case .success(let result):
                 self.navigationController?.popViewController(animated: result)
@@ -75,50 +75,6 @@ class SignInViewController: UIViewController {
         
     }
     
-    func validate() {
-        guard let username = tfMobile.text?.trimmed, let password = tfPassword.text?.trimmed else { return }
-        if (username.isEmpty) {
-            alert(message: "Enter Username", title: "Empty Field!")
-        }else {
-            print("not empty username")
-            if(username.isValidRegEx(.email)) || (username.isValidRegEx(.phoneNo)) {
-                usernameErr = true
-            }else {
-                alert(message: "e.g. mike@fine.co/ 9810219190", title: "Invalid Username!")
-            }
-        }
-        
-        if (password.isEmpty) {
-            alert(message: "Enter Password.", title: "Empty Field!")
-        }else {
-            print("not empty password")
-            if !password.isValidRegEx(.password) {
-                alert(message: "Password Length 6-15 characters.", title: "Invalid Password Format!")
-            }else {
-                passwordErr = true
-            }
-        }
-        
-        if(usernameErr == true && passwordErr == true){
-            signIn(username: username, password: password)
-        }
-    }
-    
-    func signIn(username: String, password: String){
-        print("valid data: \(username), \(password)")
-        let params = ["username": username, "password": password]
-        APIService.shared.request("https://cli.smartcardnepal.com/api/customer/auth", method: .POST, params: params) { [weak self](result: (Result<Any, APIError>)) in
-            switch result {
-            case .success(let singInResponse):
-                let model = ModelManager().transform(jsonObject: singInResponse)
-                Log.debug(msg: "\(model.title) \(String(describing: model.url)) \(String(describing: model.category)) \(String(describing: model.views))")
-                self?.lblLoginWith.text = model.category
-            case .failure(let error):
-                self?.alert(message: error.rawValue)
-            }
-        }
-    }
-    
     func setDelegate() {
         
         tfMobile.delegate = self
@@ -133,6 +89,18 @@ class SignInViewController: UIViewController {
         
     }
     
+}
+
+// MARK: - SignInDelegate
+extension SignInViewController: SignInDelegate {
+    func onSuccess(_ profile: ProfileModel, _ msg: String) {
+        alert(message: msg, title: "")
+        _ = signInVM?.saveProfile(profile: profile)
+    }
+    
+    func onFailure(msg: String, title: String) {
+        alert(message: msg, title: title)
+    }
 }
 
 // MARK: - TextFieldDelegate
@@ -164,7 +132,7 @@ extension SignInViewController: GIDSignInDelegate {
         let phone = ""
         let profile = ProfileModel(name: fullName, firstName: givenName, lastName: familyName, picture: picture, email: email, phone: phone)
         Log.debug(msg: "\(profile)")
-        _ = interactor?.saveProfile(profile: profile)
+        _ = signInVM?.saveProfile(profile: profile)
         navigationController?.popViewController(animated: true)
         
     }

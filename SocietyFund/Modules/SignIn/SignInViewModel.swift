@@ -1,30 +1,39 @@
 //
-//  SignInInteractor.swift
+//  SignInViewModel.swift
 //  SocietyFund
 //
-//  Created by sanish on 9/4/20.
+//  Created by sanish on 9/7/20.
 //  Copyright © 2020 AahamSolutions. All rights reserved.
 //
 
-import Foundation
+import UIKit
 import FBSDKLoginKit
 import GoogleSignIn
 
-class SignInInteractor {
+protocol SignInDelegate: class {
+    func onSuccess(_ response: ProfileModel, _ msg: String)
+    func onFailure(msg: String, title: String)
+}
 
-    func getDialCode(completion: ([CountryCode]) -> Void) {
-        if let path = Bundle.main.url(forResource: "CountryCode", withExtension: "json") {
-            print(path)
-            do {
-                let data = try Data(contentsOf: path, options: .mappedIfSafe)
-                print(data)
-                let jsonResult = try JSONDecoder().decode([CountryCode].self, from: data)
-                completion(jsonResult)
-              } catch {
-                Log.debug(msg: error)
-              }
+class SignInViewModel {
+    var delegate: SignInDelegate?
+    func signIn(username: String, password: String){
+        let params = ["username": username, "password": password]
+        APIService.shared.request("https://run.mocky.io/v3/412e826c-12bc-4620-8b18-fcd5c5889d83", method: .POST, params: params) { [weak self](result: (Result<SignInResponse, APIError>)) in
+            switch result {
+            case .success(let signInResponse):
+                self?.setProfileModel(signInResponse: signInResponse)
+            case .failure(let error):
+                self?.delegate?.onFailure(msg: error.rawValue, title: "")
+            }
+        }
+    }
+    
+    func setProfileModel(signInResponse: SignInResponse) {
+        if let profile = ModelManager().getProfileData(model: signInResponse) {
+            self.delegate?.onSuccess(profile, signInResponse.message!)
         }else {
-            print("path nil")
+            self.delegate?.onFailure(msg: "No Profile Data", title: "")
         }
     }
     
@@ -40,13 +49,13 @@ class SignInInteractor {
                 completion(.failure(error!))
                 return
             }
-    
+            
             guard let token = AccessToken.current else { return }
             let parameters = ["fields" : "birthday, gender, first_name, last_name, name, email, verified, picture.type(large)"]
-//            let graphRequest = GraphRequest(graphPath: "/\(appId)/accounts/test-users", parameters: parameters, httpMethod: .get)
-//            graphRequest.start { (con,result, error) in
-//                Log.debug(msg: result)
-//            }
+            //            let graphRequest = GraphRequest(graphPath: "/\(appId)/accounts/test-users", parameters: parameters, httpMethod: .get)
+            //            graphRequest.start { (con,result, error) in
+            //                Log.debug(msg: result)
+            //            }
             let graphRequest = GraphRequest(graphPath: "me",parameters: parameters, tokenString: token.tokenString, version: nil, httpMethod: .get)
             graphRequest.start { (connection, result, error) in
                 if error != nil {
@@ -91,5 +100,6 @@ class SignInInteractor {
         }
         return flag
     }
-
+    
+    
 }

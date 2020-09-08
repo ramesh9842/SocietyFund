@@ -25,7 +25,7 @@ class SettingsViewController: UIViewController {
     }
     
     func navigateToMenuViewControllers(menuSelected: String) {
-       
+        
     }
 }
 

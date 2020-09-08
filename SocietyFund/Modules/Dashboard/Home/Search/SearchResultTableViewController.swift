@@ -32,7 +32,7 @@ class SearchResultTableViewController: UITableViewController {
             }
         }
     }
-
+    
     // MARK: - Table view data source
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return searchedproject.count
@@ -52,12 +52,12 @@ class SearchResultTableViewController: UITableViewController {
         
         guard let selectedVC = (mmDrawerContainer?.centerViewController as? TabBarController)?.selectedViewController as? UINavigationController else { return }
     }
-
+    
 }
 
 // MARK: - SearchResultDelegate
 extension SearchResultTableViewController: UISearchResultsUpdating,UISearchBarDelegate {
- 
+    
     func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
         searchBar.isLoading = true
         self.tableView.isHidden = true
@@ -79,11 +79,11 @@ extension SearchResultTableViewController: UISearchResultsUpdating,UISearchBarDe
     }
     
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar){
-       print("cancell searhc")
+        print("cancell searhc")
     }
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         
     }
- 
+    
 }

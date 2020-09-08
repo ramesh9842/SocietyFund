@@ -8,10 +8,16 @@
 
 import Foundation
 
-struct SignInResponse: Decodable {
-    var token: String
-    var firstName: String
-    var lastName: String
-    var email: String
-    var profile: String
+struct SignInResponse: Codable {
+    var success: Bool?
+    var message: String?
+    var data: LoginData?
+}
+
+struct LoginData: Codable {
+    var firstname: String?
+    var lastname: String?
+    var email: String?
+    var phone: String?
+    var imgUrl: String?
 }

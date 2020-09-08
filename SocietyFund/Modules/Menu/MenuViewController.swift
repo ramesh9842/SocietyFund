@@ -12,14 +12,6 @@ import SDWebImage
 import FBSDKLoginKit
 import GoogleSignIn
 
-protocol MenuViewProtocol {
-    
-}
-
-extension MenuViewController: MenuViewProtocol {
-    
-}
-
 class MenuViewController: UIViewController {
     
     @IBOutlet weak var btnViewProfile: UIButton!
@@ -28,8 +20,8 @@ class MenuViewController: UIViewController {
     @IBOutlet weak var tableView: UITableView!
     var profileData: ProfileModel!
     var menuData = [MenuModel]()
-    var presenter: MenuPresenterProtocol?
-
+    var menuVM: MenuViewModel!
+    
     @IBAction func viewProfilePressed(_ sender: UIButton) {
         guard let selectedVC = (mmDrawerContainer?.centerViewController as? TabBarController)?.selectedViewController as? UINavigationController else {
             return
@@ -52,108 +44,45 @@ class MenuViewController: UIViewController {
         tableView.rowHeight = 44
         navigationController?.isNavigationBarHidden = true
         menuData = [Menu.notifications.components, Menu.about.components, Menu.contact.components, Menu.website.components, Menu.bank.components, Menu.project.components, Menu.kyc.components, Menu.refer.components, Menu.donation.components, Menu.setting.components, Menu.logout.components]
+        menuVM = MenuViewModel()
+        
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-//        setUpFacebookUser()
-        userLoggedIn()
-    }
-    
-    func userLoggedIn() {
-        Log.debug(msg: "User logged In..")
-        lblUserName.isHidden = false
-        btnViewProfile.setTitle("View Profile", for: .normal)
-        btnViewProfile.tag = 1
-        if let data = UserDefaults.standard.data(forKey: "profile") {
-            do {
-                profileData = try JSONDecoder().decode(ProfileModel.self, from: data)
-                lblUserName.text = self.profileData?.name
-                setProfileImage(profileData.picture!) { (result) in
-                    DispatchQueue.main.async {
-                        switch result {
-                        case .success(let data):
-                            self.imgProfile.image = UIImage(data: data)
-                        case .failure:
-                            self.imgProfile.image = UIImage(named: "smallLogo")
-                        }
+        
+        let result = menuVM.userLoggedIn()
+        if result.1 {
+            
+            profileData = result.0
+            Log.debug(msg: "User logged In..")
+            lblUserName.isHidden = false
+            btnViewProfile.setTitle("View Profile", for: .normal)
+            btnViewProfile.tag = 1
+            lblUserName.text = self.profileData.name!
+            setProfileImage(profileData.picture!) { (result) in
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let data):
+                        self.imgProfile.image = UIImage(data: data)
+                    case .failure:
+                        self.imgProfile.image = UIImage(named: "smallLogo")
                     }
                 }
-            } catch {
-                print("Unable to Decode Note (\(error))")
             }
             self.tableView.tableViewCellForLastRow()?.isHidden = false
-        }else {
-            userLoggedOut()
-        }
-    }
-    
-    func userLoggedOut() {
-        lblUserName.isHidden = true
-        btnViewProfile.setTitle("Sign In", for: .normal)
-        imgProfile.image = UIImage(named: "smallLogo")
-        btnViewProfile.tag = 0
-        self.tableView.tableViewCellForLastRow()?.isHidden = true
-    }
-    
-    func setUpFacebookUser() {
-        if let token = AccessToken.current, !token.isExpired{
-            userLoggedIn()
-        }else {
-            if (GIDSignIn.sharedInstance()?.currentUser) != nil {
-                userLoggedIn()
-            }else {
-              userLoggedOut()
-            }
-        }
-    }
-    
-    func navigateToMenuViewControllers(menuSelected: String) {
-        guard let selectedVC = (mmDrawerContainer?.centerViewController as? TabBarController)?.selectedViewController as? UINavigationController else {
-            return
-        }
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        if menuSelected == "Notifications" {
-            let vc = storyboard.instantiateViewController(withIdentifier: "NotificationViewController")
-            selectedVC.pushViewController(vc, animated: true)
-            mmDrawerContainer?.toggle(.left, animated: true, completion: nil)
-        }else if menuSelected == "Refer and Raise" {
-            let vc = storyboard.instantiateViewController(withIdentifier: "ReferViewController")
-            selectedVC.pushViewController(vc, animated: true)
-            mmDrawerContainer?.toggle(.left, animated: true, completion: nil)
-        }else if menuSelected == "Contact Us" {
-            selectedVC.tabBarController?.selectedIndex = 3
-            mmDrawerContainer?.toggle(.left, animated: true, completion: nil)
-        }else if menuSelected == "Settings"{
-            let vc = storyboard.instantiateViewController(withIdentifier: "SettingsViewController")
-            selectedVC.pushViewController(vc, animated: true)
-            mmDrawerContainer?.toggle(.left, animated: true, completion: nil)
-        }else if menuSelected == "Logout"{
-            let domain = Bundle.main.bundleIdentifier!
-            UserDefaults.standard.removePersistentDomain(forName: domain)
-            UserDefaults.standard.synchronize()
-            print(Array(UserDefaults.standard.dictionaryRepresentation().keys).count)
-//            if let token = AccessToken.current, !token.isExpired{
-//                Log.debug(msg: "Loggin out Facebook User: \(token.userID) ")
-//                LoginManager().logOut()
-//            }else {
-//                if let current = GIDSignIn.sharedInstance()?.currentUser {
-//                    Log.debug(msg: "Loggin out Google User: \(current.userID) ")
-//                    isGoogleSignedIn = false
-//                    GIDSignIn.sharedInstance().signOut()
-//                }
-//            }
-            let vc = (mmDrawerContainer?.centerViewController as? TabBarController)?.viewControllers?.first?.children
-            vc?.first?.viewWillAppear(true)
-            mmDrawerContainer?.toggle(.left, animated: true, completion: nil)
-        }else if(menuSelected == "Bank" || menuSelected == "KYC"){
             
         }else {
-            alert(message: "Under Construction!!!")
-            mmDrawerContainer?.toggle(.left, animated: true, completion: nil)
+            
+            lblUserName.isHidden = true
+            btnViewProfile.setTitle("Sign In", for: .normal)
+            imgProfile.image = UIImage(named: "smallLogo")
+            btnViewProfile.tag = 0
+            self.tableView.tableViewCellForLastRow()?.isHidden = true
+            
         }
-        
     }
+    
 }
 
 // MARK: - TableViewDelegate
@@ -194,7 +123,7 @@ extension MenuViewController: UITableViewDelegate, UITableViewDataSource {
         let selectedIndex = tableView.indexPathForSelectedRow
         let cell = tableView.cellForRow(at: selectedIndex!) as! MenuCell
         guard let selectedMenu =  cell.lblMenu.text else { return }
-        navigateToMenuViewControllers(menuSelected: selectedMenu)
+        menuVM.navigateToMenuViewControllers(menuSelected: selectedMenu)
         
         if menuData[indexPath.section].opened == true {
             menuData[indexPath.section].opened = false
@@ -209,9 +138,16 @@ extension MenuViewController: UITableViewDelegate, UITableViewDataSource {
     
 }
 
-// MARK:- MenuCell
-class MenuCell: UITableViewCell {
-    @IBOutlet weak var lblMenu: UILabel!
-    @IBOutlet weak var imgMenu: UIImageView!
-    @IBOutlet weak var imgUpDown: UIImageView!
-}
+/*
+ func setUpFacebookUser() {
+ if let token = AccessToken.current, !token.isExpired{
+ userLoggedIn()
+ }else {
+ if (GIDSignIn.sharedInstance()?.currentUser) != nil {
+ userLoggedIn()
+ }else {
+ userLoggedOut()
+ }
+ }
+ }
+ */

@@ -35,11 +35,12 @@ class APIService {
     static let shared = APIService()
     let defaultSession = URLSession(configuration: .default)
     
-    typealias CompletionHandler = (Result<Any, APIError>) -> Void
+    typealias CompletionHandler<T> = (Result<T, APIError>) -> Void
     
-    func request(_ url: String, method: HTTPMethod, params: Dictionary<String, Any>?,
-                               completion: @escaping CompletionHandler) {
+    func request<T: Codable>(_ url: String, method: HTTPMethod, params: Dictionary<String, Any>?,
+                               completion: @escaping CompletionHandler<T>) {
         let request = clientURLRequest(url: url, method: method, params: params)
+      
         defaultSession.dataTask(with: request) { (data, response, error) in
 
             if error == nil {
@@ -51,7 +52,7 @@ class APIService {
                         break
                     case 200...299:
                         do {
-                            let jsonObj = try JSONSerialization.jsonObject(with: data!, options: .allowFragments)
+                            let jsonObj = try JSONDecoder().decode(T.self, from: data!)
                             completion(.success(jsonObj))
                         }catch {
                             print(error)
@@ -81,6 +82,7 @@ class APIService {
         var request = URLRequest(url: URL(string: url)!)
         request.httpMethod = method.rawValue
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+//        request.setValue("$2b$10$soA2vqDDIcBJJG08wCJs9uiUD7eB2eMnpARVjrB0D4LX6yKdJq07q", forHTTPHeaderField: "secret-key")
         guard let params = params else { return request}
         do {
             request.httpBody = try JSONSerialization.data(withJSONObject: params, options: .fragmentsAllowed)

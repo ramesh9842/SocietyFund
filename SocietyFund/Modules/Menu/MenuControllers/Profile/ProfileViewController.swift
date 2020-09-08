@@ -30,6 +30,10 @@ class ProfileViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        setUpView()
+    }
+    
+    func setUpView() {
         lblFirstName.text = profileData.firstName
         lblLastName.text = profileData.lastName
         lblEmail.text = profileData.email

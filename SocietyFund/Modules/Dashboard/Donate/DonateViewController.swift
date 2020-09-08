@@ -9,10 +9,10 @@
 import UIKit
 
 class DonateViewController: UIViewController {
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-       addLogoToNavigationBarItem()
+        addLogoToNavigationBarItem()
     }
     
 }

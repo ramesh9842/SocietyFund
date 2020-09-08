@@ -8,6 +8,7 @@
 
 import Foundation
 
-struct SignUpResponse: Decodable {
+struct SignUpResponse: Codable {
+    var success: Bool
     var message: String
 }

@@ -31,17 +31,17 @@ class ContactViewController: UIViewController {
             alert(message: "Fields can't be empty.", title: "Empty Field!")
         }else {
             if(!mobile.isValidRegEx(.phoneNo)) {
-                 alert(message: "e.g. 9810219190", title: "Invalid Mobile Number!")
+                alert(message: "e.g. 9810219190", title: "Invalid Mobile Number!")
             }
             if(!email.isValidRegEx(.email)) {
-              alert(message: "e.g. mike@hello.co", title: "Invalid Email!")
+                alert(message: "e.g. mike@hello.co", title: "Invalid Email!")
             }
         }
-    //        senMessage(firstName: fname, lastName: lname, mobile: geocode.append(mobile), email: email, password: password)
+        //        senMessage(firstName: fname, lastName: lname, mobile: geocode.append(mobile), email: email, password: password)
     }
-        
+    
     func senMessage(fullname: String, mobile: String, email: String, message: String) {
-            
+        
     }
     
     func customizeTextFields() {
@@ -50,5 +50,5 @@ class ContactViewController: UIViewController {
         tfPhone.customTextField()
         tfMessage.customTextField()
     }
-
+    
 }

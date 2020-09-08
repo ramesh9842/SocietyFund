@@ -15,12 +15,12 @@ class ReferViewController: UIViewController {
         super.viewDidLoad()
         
         customizeTextFields()
-
+        
     }
     
     func customizeTextFields() {
         tfSelectProject.customTextField()
         tfProjectLink.customTextField()
     }
-
+    
 }

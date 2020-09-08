@@ -24,17 +24,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
         guard let scene = (scene as? UIWindowScene) else { return }
         self.window = UIWindow(windowScene: scene)
-
+        
         if let isLoggedIn = UserDefaults.standard.value(forKey: "isLoggedIn") as? Bool, isLoggedIn == true {
             // instantiate the main tab bar controller and set it as root view controller
             // using the storyboard identifier we set earlier
-//            let tabController = storyboard.instantiateViewController(identifier: "TabBarController") as! TabBarController
-//            let menuController = storyboard.instantiateViewController(identifier: "MenuViewController") as! MenuViewController
-//            mmDrawerContainer = MMDrawerController(center: tabController, leftDrawerViewController: UINavigationController(rootViewController: menuController))
-//            mmDrawerContainer!.openDrawerGestureModeMask = MMOpenDrawerGestureMode.all
-//            mmDrawerContainer!.closeDrawerGestureModeMask = MMCloseDrawerGestureMode.all
-//            mmDrawerContainer?.modalPresentationStyle = .fullScreen
-//            setRootViewController(rootViewController: mmDrawerContainer!)
+            //            let tabController = storyboard.instantiateViewController(identifier: "TabBarController") as! TabBarController
+            //            let menuController = storyboard.instantiateViewController(identifier: "MenuViewController") as! MenuViewController
+            //            mmDrawerContainer = MMDrawerController(center: tabController, leftDrawerViewController: UINavigationController(rootViewController: menuController))
+            //            mmDrawerContainer!.openDrawerGestureModeMask = MMOpenDrawerGestureMode.all
+            //            mmDrawerContainer!.closeDrawerGestureModeMask = MMCloseDrawerGestureMode.all
+            //            mmDrawerContainer?.modalPresentationStyle = .fullScreen
+            //            setRootViewController(rootViewController: mmDrawerContainer!)
         } else {
             // if user isn't logged in
             // instantiate the navigation controller and set it as root view controller
@@ -59,13 +59,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
     
     func setRootViewController(rootViewController:UIViewController) {
-       
+        
         // add animation
-//        UIView.transition(with: window,
-//                          duration: 0.5,
-//                          options: [.transitionFlipFromLeft],
-//                          animations: nil,
-//                          completion: nil)
+        //        UIView.transition(with: window,
+        //                          duration: 0.5,
+        //                          options: [.transitionFlipFromLeft],
+        //                          animations: nil,
+        //                          completion: nil)
         self.window?.rootViewController = rootViewController
         self.window?.makeKeyAndVisible()
     }
@@ -82,7 +82,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             annotation: [UIApplication.OpenURLOptionsKey.annotation]
         )
     }
-
+    
     
     func sceneDidDisconnect(_ scene: UIScene) {
         // Called as the scene is being released by the system.
