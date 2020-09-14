@@ -182,7 +182,7 @@ extension HomeViewController: HomeViewDelegate {
     }
     
     func onFailure(msg: String) {
-        hideMaterialLoadingIndicator()
+        removeSpinner()
         DispatchQueue.main.async {
             self.collectionView.isHidden = true
         }

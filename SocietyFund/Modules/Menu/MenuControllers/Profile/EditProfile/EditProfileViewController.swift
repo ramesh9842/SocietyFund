@@ -15,15 +15,17 @@ class EditProfileViewController: UIViewController {
     @IBOutlet weak var tfEmail: UITextField!
     @IBOutlet weak var tfGeoCode: UITextField!
     @IBOutlet weak var imgProfile: UIImageView!
+    @IBOutlet weak var viewProfile: UIView!
     
     @IBAction func editProfilePressed(_ sender: UIButton) {
-        validator.validate(tfFirstName: tfFirstName, tfLName: tfLName, tfGeoCode: tfGeoCode, tfMobile: tfMobile, tfEmail: tfEmail)
+        validator.validate(tfFirstName: tfFirstName, tfLName: tfLName, tfGeoCode: tfGeoCode, tfMobile: tfMobile, tfEmail: tfEmail, imgProfile: imgProfile)
     }
     
     var editprofileVM: EditProfileViewModel!
     var validator: EditProfileInputValidator!
     var profileData: ProfileModel!
-
+    var imagePicker: ImagePicker!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -33,7 +35,20 @@ class EditProfileViewController: UIViewController {
         validator = EditProfileInputValidator(vm: editprofileVM)
         validator.delegate = self
         editprofileVM.delegate = self
-        
+        self.imagePicker = ImagePicker(presentationController: self, delegate: self)
+        addTapGesture()
+    }
+    
+    func addTapGesture() {
+        let tap = UITapGestureRecognizer(target: self, action: #selector(uploadProfileImage(_:)))
+        viewProfile.isUserInteractionEnabled = true
+        tap.numberOfTouchesRequired = 1
+        viewProfile.addGestureRecognizer(tap)
+    }
+    
+    @objc func uploadProfileImage(_ sender: UITapGestureRecognizer) {
+        Log.debug(msg: "tapped")
+        self.imagePicker.present(from: self.view)
     }
     
     func setUpView() {
@@ -69,6 +84,17 @@ class EditProfileViewController: UIViewController {
     
 }
 
+// MARK: - ImagePickerDelegate
+
+extension EditProfileViewController: ImagePickerDelegate {
+    
+    func didSelect(image: UIImage?) {
+        Log.debug(msg: "Setting Image")
+        imgProfile.image = image
+    }
+    
+}
+
 // MARK: - EditProfileDelegate
 extension EditProfileViewController: EditProfileDelegate {
     func onSuccess(_ response: EditProfileResponse) {
@@ -78,8 +104,6 @@ extension EditProfileViewController: EditProfileDelegate {
     func onFailure(msg: String, title: String) {
         alert(message: msg, title: title)
     }
-    
-    
 }
 
 

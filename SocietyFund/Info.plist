@@ -64,8 +64,10 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+    <key>NSCameraUsageDescription</key>
+    <string>This app wants to take pictures.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Requires Photo Library</string>
+	<string>This app wants to use your photos.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>SegoeUI-BoldItalic.ttf</string>

@@ -40,7 +40,7 @@ class APIService {
     func request<T: Codable>(_ url: String, method: HTTPMethod, params: Dictionary<String, Any>?,
                                completion: @escaping CompletionHandler<T>) {
         let request = clientURLRequest(url: url, method: method, params: params)
-      
+        
         defaultSession.dataTask(with: request) { (data, response, error) in
 
             if error == nil {
@@ -78,6 +78,48 @@ class APIService {
         }.resume()
     }
     
+    func uploadRequest<T: Codable>(_ url: String, method: HTTPMethod, params: Dictionary<String, Any>?, data: Data?,
+                               completion: @escaping CompletionHandler<T>) {
+        let request = clientURLRequest(url: url, method: method, params: params)
+        
+        defaultSession.dataTask(with: request) { (data, response, error) in
+
+            if error == nil {
+                if let response = response as? HTTPURLResponse {
+                    print(response.statusCode)
+                    switch response.statusCode {
+                    case 100...199:
+                        completion(.failure(.informationalError))
+                        break
+                    case 200...299:
+                        do {
+                            let jsonObj = try JSONDecoder().decode(T.self, from: data!)
+                            completion(.success(jsonObj))
+                        }catch {
+                            print(error)
+                        }
+                        break
+                    case 300...399:
+                        completion(.failure(.redirectionError))
+                        break
+                    case 400...499:
+                        completion(.failure(.badRequest))
+                        break
+                    case 500...599:
+                        completion(.failure(.serverError))
+                        break
+                    default:
+                        break
+                    }
+                }
+            }else {
+                completion(.failure(.noInternet))
+            }
+
+        }.resume()
+    }
+    
+    
     func clientURLRequest(url: String, method: HTTPMethod, params: Dictionary<String, Any>? = nil) -> URLRequest {
         var request = URLRequest(url: URL(string: url)!)
         request.httpMethod = method.rawValue
@@ -85,7 +127,9 @@ class APIService {
 //        request.setValue("$2b$10$soA2vqDDIcBJJG08wCJs9uiUD7eB2eMnpARVjrB0D4LX6yKdJq07q", forHTTPHeaderField: "secret-key")
         guard let params = params else { return request}
         do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: params, options: .fragmentsAllowed)
+            let data = try JSONSerialization.data(withJSONObject: params, options: .fragmentsAllowed)
+            Log.debug(msg: "DataFormat: \(data.base64EncodedString())")
+            request.httpBody = data
         }catch {
             Log.debug(msg: "httpbodyErr: \(error.localizedDescription)")
         }

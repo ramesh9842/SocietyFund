@@ -25,12 +25,15 @@ class EditProfileInputValidator {
         self.vmEditProfile = vm
     }
     
-    func validate(tfFirstName: UITextField, tfLName: UITextField, tfGeoCode: UITextField, tfMobile: UITextField,tfEmail: UITextField) {
+    func validate(tfFirstName: UITextField, tfLName: UITextField, tfGeoCode: UITextField, tfMobile: UITextField,tfEmail: UITextField, imgProfile: UIImageView) {
         guard let fname = tfFirstName.text?.trimmed, let lname = tfLName.text?.trimmed, let geocode = tfGeoCode.text?.trimmed, let mobile = tfMobile.text?.trimmed, let email = tfEmail.text?.trimmed else { return }
         
         if (fname.isEmpty || lname.isEmpty || geocode.isEmpty || mobile.isEmpty || email.isEmpty) {
             isGoodToGo = false
             delegate?.onFailure(msg: "Fields can't be empty.", title: "Empty Field!")
+        }else if (imgProfile.image == nil) {
+             isGoodToGo = false
+            delegate?.onFailure(msg: "Image not set", title: "No Image!")
         }else {
             if(!mobile.isValidRegEx(.phoneNo)) {
                 delegate?.onFailure(msg: "e.g. 9810219190", title: "Invalid Mobile Number!")
